@@ -112,7 +112,10 @@ namespace NTC.Global.Pool
         public static async void DespawnAll(float delay = 0f)
         {
             if (delay > 0)
+            {
                 await Delay(delay);
+                if (IsEditor) return;
+            }
             
             foreach (var part in PoolDictionary)
             {
@@ -120,7 +123,7 @@ namespace NTC.Global.Pool
 
                 foreach (var item in pool)
                 {
-                    DefaultDespawn(item, 0);
+                    DefaultDespawn(item);
                 }
             }
         }
