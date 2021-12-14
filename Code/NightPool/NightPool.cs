@@ -240,7 +240,7 @@ namespace NTC.Global.Pool
             SetupTransform(newPoolItemObject.transform, position, rotation, parent, worldPositionStays);
 
             PoolDictionary.Add(name, newPool);
-            OnObjectSpawned?.Invoke(newPoolItemObject);
+            CheckForSpawnEvents(toSpawn);
                 
             return newPoolItemObject;
         }
