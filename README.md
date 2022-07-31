@@ -9,7 +9,7 @@
 
 # How to use
 
-> YouTube Video about NightPool
+> YouTube Video about NightPool (old version)
 
 [![NightCache YouTube Video](https://img.youtube.com/vi/YPWriGuO72Q/0.jpg)](https://www.youtube.com/watch?v=YPWriGuO72Q)
 
@@ -24,14 +24,18 @@
 ```csharp
     public class GameObjectSpawner : MonoBehaviour
     {
+        [SerializeField] private GameObject prefab;
+    
+        private GameObject _spawnedGameObject;
+    
         private void Spawn()
         {
-            Instantiate(gameObject, transform.position, Quaternion.identity);
+            _spawnedGameObject = Instantiate(prefab, transform.position, Quaternion.identity);
         }
         
         private void Despawn()
         {
-            Destroy(gameObject);
+            Destroy(_spawnedGameObject);
         }
     }
 ```
@@ -41,14 +45,18 @@
 ```csharp
     public class GameObjectSpawner : MonoBehaviour
     {
+        [SerializeField] private GameObject prefab;
+    
+        private GameObject _spawnedGameObject;
+    
         private void Spawn()
         {
-            NightPool.Spawn(gameObject, transform.position, Quaternion.identity);
+            _spawnedGameObject = NightPool.Spawn(prefab, transform.position, Quaternion.identity);
         }
         
         private void Despawn()
         {
-            NightPool.Despawn(gameObject);
+            NightPool.Despawn(_spawnedGameObject);
         }
     }
 ```
@@ -68,18 +76,20 @@
 7) If you want to invoke methods `OnSpawn()` and `OnDespawn()`, implement interface `IPoolItem` on GameObject
 
 ```csharp
-    public class GameObjectSpawner : MonoBehaviour
+    public class UnitSpawner : MonoBehaviour
     {
-        public Unit unit;
+        [SerializeField] private Unit unitPrefab;
+        
+        private Unit _spawnedUnit;
     
         private void SpawnUnit()
         {
-            Unit spawnedUnit = NightPool.Spawn(unit, transform.position, Quaternion.identity);
+            _spawnedUnit = NightPool.Spawn(unitPrefab, transform.position, Quaternion.identity);
         }
         
         private void DespawnUnit()
         {
-            NightPool.Despawn(unit);
+            NightPool.Despawn(_spawnedUnit);
         }
     }
 ```
@@ -87,14 +97,14 @@
 ```csharp
     public class Unit : MonoBehaviour, IPoolItem
     {
-        public void OnSpawn()
+        void IPoolItem.OnSpawn()
         {
             //DoSomething
         }
         
-        public void OnDespawn()
+        void IPoolItem.OnDespawn()
         {
-            Unit.UnitHealth.Health = 100;
+            //DoSomething
         }
     }
 ```
