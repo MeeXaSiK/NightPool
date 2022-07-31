@@ -67,7 +67,6 @@
 
 | Parameters | Info |
 | ------ | ------ |
-| `Name` | Created for convenience and does not affect anything |
 | `Prefab` | Object to spawn |
 | `Size` | Spawn count |
 
