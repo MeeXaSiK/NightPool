@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // NightPool is an object pool for Unity https://github.com/MeeXaSiK/NightPool
-// Copyright (c) 2021 Night Train Code
+// Copyright (c) 2021-2022 Night Train Code
 // ----------------------------------------------------------------------------
 
 using System.Collections.Generic;
@@ -13,8 +13,9 @@ namespace NTC.Global.Pool
     public class PoolPreset : ScriptableObject
     {
         [SerializeField] private string poolName;
-        
-        public List<PoolItem> poolItems = new List<PoolItem>(256);
+        [SerializeField] private List<PoolItem> poolItems = new List<PoolItem>(256);
+
+        public IReadOnlyList<PoolItem> PoolItems => poolItems;
 
         public string GetName()
         {

@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // NightPool is an object pool for Unity https://github.com/MeeXaSiK/NightPool
-// Copyright (c) 2021 Night Train Code
+// Copyright (c) 2021-2022 Night Train Code
 // ----------------------------------------------------------------------------
 
 using System;
@@ -15,15 +15,17 @@ namespace NTC.Global.Pool
 {
     public static class NightPool
     {
-        private static readonly Dictionary<string, Queue<GameObject>> PoolDictionary =
-            new Dictionary<string, Queue<GameObject>>(64);
+        private static readonly Dictionary<GameObject, Queue<GameObject>> PoolDictionary =
+            new Dictionary<GameObject, Queue<GameObject>>(64);
         
-        private static readonly Dictionary<string, Transform> ParentDictionary =
-            new Dictionary<string, Transform>(64);
+        private static readonly Dictionary<GameObject, Transform> ParentDictionary =
+            new Dictionary<GameObject, Transform>(64);
 
-        private static readonly List<IPoolItem> ItemEventComponents = new List<IPoolItem>(32);
-        private static readonly int DefaultPoolCapacity = 64;
-        
+        private static readonly List<IPoolItem> ItemEventComponents = 
+            new List<IPoolItem>(32);
+
+        private const int DefaultPoolCapacity = 64;
+
         public static event Action<GameObject> OnObjectSpawned;
         public static event Action<GameObject> OnObjectDespawned;
 
@@ -34,22 +36,22 @@ namespace NTC.Global.Pool
             if (poolPreset == null || IsEditor)
                 return;
             
-            foreach (var poolItem in poolPreset.poolItems)
+            foreach (var poolItem in poolPreset.PoolItems)
             {
-                var poolItemTag = poolItem.Tag;
-                var isPoolExists = PoolDictionary.ContainsKey(poolItemTag);
-                var newPool = isPoolExists 
-                    ? PoolDictionary[poolItemTag] 
+                var prefab = poolItem.Prefab;
+                var isPoolExists = PoolDictionary.ContainsKey(prefab);
+                var pool = isPoolExists 
+                    ? PoolDictionary[prefab] 
                     : new Queue<GameObject>(DefaultPoolCapacity);
 
-                for (var i = 0; i < poolItem.size; i++)
+                for (var i = 0; i < poolItem.Size; i++)
                 {
-                    InstantiateIntoExistingPool(newPool, poolItem.prefab, poolItemTag);
+                    InstantiateIntoExistingPool(pool, poolItem.Prefab);
                 }
 
                 if (isPoolExists == false)
                 {
-                    PoolDictionary.Add(poolItemTag, newPool);
+                    PoolDictionary.Add(prefab, pool);
                 }
             }
         }
@@ -65,6 +67,7 @@ namespace NTC.Global.Pool
             bool worldStaysPosition = false) where T : Component
         {
             var position = parent != null ? parent.position : Vector3.zero;
+            
             return 
                 DefaultSpawn(component.gameObject, position, rotation, parent, worldStaysPosition).
                 GetComponent<T>();
@@ -79,6 +82,7 @@ namespace NTC.Global.Pool
             bool worldPositionStays = false)
         {
             var position = parent != null ? parent.position : Vector3.zero;
+            
             return DefaultSpawn(toSpawn, position, rotation, parent, worldPositionStays);
         }
 
@@ -94,18 +98,26 @@ namespace NTC.Global.Pool
 
         public static async void DespawnAllThese(GameObject toDespawn, float delay = 0f)
         {
-            var prefabName = toDespawn.name;
-            var pool = PoolDictionary[prefabName];
-
-            if (delay > 0)
+            if (toDespawn.TryGetComponent(out Poolable poolable))
             {
-                await Delay(delay);
-                if (IsEditor) return;
+                var pool = PoolDictionary[poolable.Prefab];
+
+                if (delay > 0)
+                {
+                    await Delay(delay);
+                    if (IsEditor) return;
+                }
+
+                foreach (var item in pool)
+                {
+                    DefaultDespawn(item);
+                }
             }
-
-            foreach (var item in pool)
+            else
             {
-                DefaultDespawn(item);
+                Debug.LogError($"{toDespawn.name} was not spawned from pool!");
+                
+                Object.Destroy(toDespawn);
             }
         }
 
@@ -127,44 +139,77 @@ namespace NTC.Global.Pool
                 }
             }
         }
+
+        public static void DestroyPoolByGameObject(GameObject toDestroy)
+        {
+            if (toDestroy.TryGetComponent(out Poolable poolable))
+            {
+                if (PoolDictionary.TryGetValue(poolable.Prefab, out var pool))
+                {
+                    foreach (var gameObject in pool)
+                    {
+                        Object.Destroy(gameObject);
+                    }
+
+                    PoolDictionary.Remove(poolable.Prefab);
+                }
+
+                if (ParentDictionary.TryGetValue(poolable.Prefab, out var parent))
+                {
+                    Object.Destroy(parent.gameObject);
+
+                    ParentDictionary.Remove(poolable.Prefab);
+                }
+            }
+            else
+            {
+                Debug.LogError($"{toDestroy.name} was not spawned from pool!");
+            }
+        }
+
+        public static void DestroyAllPools()
+        {
+            foreach (var pool in PoolDictionary.Values)
+            {
+                foreach (var gameObject in pool)
+                {
+                    Object.Destroy(gameObject);
+                }
+            }
+
+            foreach (var parent in ParentDictionary.Values)
+            {
+                Object.Destroy(parent.gameObject);
+            }
+            
+            PoolDictionary.Clear();
+            ParentDictionary.Clear();
+        }
         
         public static void Reset()
         {
             ResetLists();
+            
             ResetActions();
         }
 
-        private static void ResetLists()
-        {
-            ItemEventComponents?.Clear();
-            PoolDictionary?.Clear();
-            ParentDictionary?.Clear();
-        }
-
-        private static void ResetActions()
-        {
-            OnObjectSpawned?.SetNull();
-            OnObjectDespawned?.SetNull();
-        }
-        
-        private static GameObject DefaultSpawn(GameObject toSpawn, Vector3 position, Quaternion rotation, 
+        private static GameObject DefaultSpawn(GameObject prefab, Vector3 position, Quaternion rotation, 
             Transform parent, bool worldPositionStays)
         {
             if (IsEditor)
                 return default;
             
-            var prefabName = toSpawn.name;
-            var isPoolExists = PoolDictionary.ContainsKey(prefabName);
+            var isPoolExists = PoolDictionary.ContainsKey(prefab);
 
             if (isPoolExists == false)
             { 
-                return InstantiateGameObjectWithNewPool(
-                    toSpawn, prefabName, position, rotation, parent, worldPositionStays);
+                return InstantiateGameObjectWithNewPool(prefab, position, rotation, parent, worldPositionStays);
             }
 
-            var newObject = GetDisabledObjectFromPool(toSpawn, prefabName);
+            var newObject = GetDisabledObjectFromPool(prefab);
             
             SetupTransform(newObject.transform, position, rotation, parent, worldPositionStays);
+            
             CheckForSpawnEvents(newObject);
             
             return newObject;
@@ -173,30 +218,38 @@ namespace NTC.Global.Pool
         private static async void DefaultDespawn(GameObject toDespawn, float delay = 0f)
         {
             if (IsEditor) return;
-            
-            var prefabName = toDespawn.name;
-            var isPoolExists = PoolDictionary.ContainsKey(prefabName);
 
-            if (delay > 0)
+            if (toDespawn.TryGetComponent(out Poolable poolable))
             {
-                await Delay(delay);
+                var isPoolExists = PoolDictionary.ContainsKey(poolable.Prefab);
+
+                if (delay > 0)
+                {
+                    await Delay(delay);
                 
-                if (toDespawn == null || IsEditor)
-                    return;
+                    if (toDespawn == null || IsEditor)
+                        return;
+                }
+            
+                toDespawn.SetActive(false);
+                toDespawn.transform.SetParent(GetPoolParent(poolable.Prefab));
+            
+                if (isPoolExists == false)
+                {
+                    var newPool = new Queue<GameObject>(DefaultPoolCapacity);
+            
+                    newPool.Enqueue(toDespawn);
+                    PoolDictionary.Add(poolable.Prefab, newPool);
+                }
+            
+                CheckForDespawnEvents(toDespawn);
             }
-            
-            toDespawn.SetActive(false);
-            toDespawn.transform.SetParent(GetPoolParent(prefabName));
-            
-            if (isPoolExists == false)
+            else
             {
-                var newPool = new Queue<GameObject>(DefaultPoolCapacity);
-            
-                newPool.Enqueue(toDespawn);
-                PoolDictionary.Add(prefabName, newPool);
+                Debug.LogError($"{toDespawn.name} was not spawned from pool!");
+                
+                Object.Destroy(toDespawn);
             }
-            
-            CheckForDespawnEvents(toDespawn);
         }
         
         private static void SetupTransform(Transform transform, Vector3 position, Quaternion rotation, 
@@ -234,23 +287,9 @@ namespace NTC.Global.Pool
             }
         }
 
-        private static GameObject InstantiateGameObjectWithNewPool(GameObject toSpawn, string name, Vector3 position, 
-            Quaternion rotation, Transform parent = null, bool worldPositionStays = false)
+        private static GameObject GetDisabledObjectFromPool(GameObject prefab, bool active = true)
         {
-            var newPool = new Queue<GameObject>(DefaultPoolCapacity);
-            var newPoolItemObject = InstantiateIntoExistingPool(newPool, toSpawn, name, true);
-            
-            SetupTransform(newPoolItemObject.transform, position, rotation, parent, worldPositionStays);
-
-            PoolDictionary.Add(name, newPool);
-            CheckForSpawnEvents(toSpawn);
-                
-            return newPoolItemObject;
-        }
-
-        private static GameObject GetDisabledObjectFromPool(GameObject toSpawn, string prefabName, bool active = true)
-        {
-            var pool = PoolDictionary[prefabName];
+            var pool = PoolDictionary[prefab];
 
             foreach (var freeObject in pool)
             {
@@ -266,36 +305,72 @@ namespace NTC.Global.Pool
                 return freeObject;
             }
             
-            return InstantiateIntoExistingPool(pool, toSpawn, prefabName, active);
+            return InstantiateIntoExistingPool(pool, prefab, active);
+        }
+        
+        private static GameObject InstantiateGameObjectWithNewPool(GameObject prefab, Vector3 position, 
+            Quaternion rotation, Transform parent = null, bool worldPositionStays = false)
+        {
+            var newPool = new Queue<GameObject>(DefaultPoolCapacity);
+            var newObject = InstantiateIntoExistingPool(newPool, prefab, true);
+            
+            SetupTransform(newObject.transform, position, rotation, parent, worldPositionStays);
+
+            PoolDictionary.Add(prefab, newPool);
+            CheckForSpawnEvents(newObject);
+                
+            return newObject;
         }
         
         private static GameObject InstantiateIntoExistingPool(
-            Queue<GameObject> pool, GameObject toSpawn, string prefabName, bool active = false)
+            Queue<GameObject> pool, GameObject prefab, bool active = false)
         {
-            var newObject = Object.Instantiate(toSpawn, GetPoolParent(prefabName));
+            var prefabName = prefab.name;
+            var poolParent = GetPoolParent(prefab);
+            var newObject = Object.Instantiate(prefab, poolParent);
                     
             newObject.name = prefabName;
             newObject.SetActive(active);
             pool.Enqueue(newObject);
 
+            if (newObject.GetComponent<Poolable>() == false)
+            {
+                var poolable = newObject.AddComponent<Poolable>();
+                
+                poolable.Setup(prefab, poolParent);
+            }
+
             return newObject;
         }
         
-        private static Transform GetPoolParent(string prefabName)
+        private static Transform GetPoolParent(GameObject prefab)
         {
-            return ParentDictionary.ContainsKey(prefabName) 
-                ? ParentDictionary[prefabName] 
-                : NewPoolParent(prefabName);
+            return ParentDictionary.ContainsKey(prefab) 
+                ? ParentDictionary[prefab] 
+                : NewPoolParent(prefab);
         }
 
-        private static Transform NewPoolParent(string prefabName)
+        private static Transform NewPoolParent(GameObject prefab)
         {
             var poolParent =
-                new GameObject($"[NightPool] {prefabName}").transform;
+                new GameObject($"[NightPool] {prefab.name}").transform;
             
-            ParentDictionary.Add(prefabName, poolParent);
+            ParentDictionary.Add(prefab, poolParent);
             
             return poolParent;
+        }
+        
+        private static void ResetLists()
+        {
+            ItemEventComponents?.Clear();
+            PoolDictionary?.Clear();
+            ParentDictionary?.Clear();
+        }
+
+        private static void ResetActions()
+        {
+            OnObjectSpawned?.SetNull();
+            OnObjectDespawned?.SetNull();
         }
     }
 }

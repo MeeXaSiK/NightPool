@@ -1,7 +1,7 @@
 ﻿// ----------------------------------------------------------------------------
 // The MIT License
 // NightPool is an object pool for Unity https://github.com/MeeXaSiK/NightPool
-// Copyright (c) 2021 Night Train Code
+// Copyright (c) 2021-2022 Night Train Code
 // ----------------------------------------------------------------------------
 
 using System;
@@ -12,16 +12,10 @@ namespace NTC.Global.Pool
     [Serializable]
     public sealed class PoolItem
     {
-        [SerializeField] private string name;
-
-        [Space] public GameObject prefab;
-                public int size;
+        [SerializeField] private GameObject prefab;
+        [SerializeField] private int size;
         
-        public string Tag => prefab.name;
-
-        public PoolItem(GameObject go)
-        {
-            prefab = go;
-        }
+        public GameObject Prefab => prefab;
+        public int Size => size;
     }
 }
