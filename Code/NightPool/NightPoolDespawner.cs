@@ -31,6 +31,7 @@ namespace NTC.Global.Pool
                 return;
             
             NightPool.Despawn(gameObject);
+            
             OnProcessed();
         }
 
