@@ -287,11 +287,7 @@ namespace NTC.Global.Pool
         private static void SetupTransform(Transform transform, Vector3 position, Quaternion rotation, 
             Transform parent = null, bool worldPositionStays = false)
         {
-            if (parent != null)
-            {
-                transform.SetParent(parent, worldPositionStays);
-            }
-
+            transform.SetParent(parent, worldPositionStays);
             transform.SetPositionAndRotation(position, rotation);
         }
 
