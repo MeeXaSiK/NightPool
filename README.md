@@ -11,6 +11,7 @@
 * [How to use](#how-to-use)
 * [Game Objects pre-caching](#game-objects-pre-caching)
 * [OnSpawn & OnDespawn events](#ipoolitem)
+* [Other features](#other-features)
 
 ## Installation
 
@@ -80,3 +81,37 @@ If you want to invoke methods `OnSpawn()` and `OnDespawn()` on poolable GameObje
         }
     }
 ```
+
+## Other features
+
+**`NightPool`**
+
+| Method or Event | Info |
+| ------ | ------ |
+| `Action<GameObject> OnObjectSpawned` | This `Action` called on any object spawned |
+| `Action<GameObject> OnObjectDespawned` | This `Action` called on any object despawned |
+| `NightPool.InstallPoolItems()` | Pre-caches game objects by `PoolPreset` |
+| `NightPool.DestroyPool(gameObject)` | Destroys pool by `GameObject` or `Pool`|
+| `NightPool.DestroyAllPools()` | Destroys all pools |
+| `NightPool.GetPoolByPrefab()` | Returns `Pool` by prefab |
+| `NightPool.Reset()` | Resets the `NightPool`. Called in `NightPoolEntry` in `OnDestroy` |
+
+**`Poolable`** added to any object created using the NightPool
+
+| Property | Info |
+| ------ | ------ |
+| `Pool` | Pool of the current poolable object |
+| `Prefab` | Prefab of the current poolable object |
+| `IsActive` | Means the object is enabled or disabled |
+
+**`Pool`** creates for each prefab that was used to spawn object
+
+| Property or Method | Info |
+| ------ | ------ |
+| `Prefab` | Prefab of the current pool |
+| `PoolablesParent` | Parent transform for each spawned game object of the current pool |
+| `Poolables` | All spawned poolables of the current Pool |
+| `GetFreeObject()` | Returns unused poolable object |
+| `PopulatePool()` | Populates pool by spawn new poolable objects |
+| `IncludePoolable()` | Includes new poolable objects in pool |
+| `ExcludePoolable()` | Excludes existing spawned objects from pool |
