@@ -11,6 +11,7 @@
 * [How to use](#how-to-use)
 * [Game Objects pre-caching](#game-objects-pre-caching)
 * [OnSpawn & OnDespawn events](#ipoolitem)
+* [NightPoolDespawner](#night-pool-despawner)
 * [Other features](#other-features)
 
 ## Installation
@@ -32,7 +33,7 @@ private void Spawn()
         
 private void Despawn()
 {
-    Destroy(_spawnedGameObject);
+    Destroy(_spawnedGameObject, 3f);
 }
 ```
 
@@ -46,7 +47,7 @@ private void Spawn()
         
 private void Despawn()
 {
-    NightPool.Despawn(_spawnedGameObject);
+    NightPool.Despawn(_spawnedGameObject, 3f);
 }
 ```
 
@@ -81,6 +82,10 @@ If you want to invoke methods `OnSpawn()` and `OnDespawn()` on poolable GameObje
         }
     }
 ```
+
+## Night Pool Despawner
+
+You can add component `NightPoolDespawner` on any prefab that will be spawned and must be despawned after a certain amount of time. This time is set in the field `TimeToDespawn`.
 
 ## Other features
 
