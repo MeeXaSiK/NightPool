@@ -9,7 +9,7 @@
 * [Main](#nightpool)
 * [Installation](#installation)
 * [How to use](#how-to-use)
-* [Game Object pre-caching](#game-object-pre-caching)
+* [Game Objects pre-caching](#game-objects-pre-caching)
 * [OnSpawn & OnDespawn events](#ipoolitem)
 
 ## Installation
@@ -49,7 +49,7 @@ private void Despawn()
 }
 ```
 
-## Game Object pre-caching
+## Game Objects pre-caching
 
 To pre-cache objects on `Awake()` you can create PoolPreset `Create -> Source -> Pool -> PoolPreset`
 
