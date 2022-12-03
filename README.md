@@ -1,109 +1,82 @@
 # NightPool
+* Fast Game Object Pool for Unity by [**Night Train Code**](https://www.youtube.com/c/NightTrainCode/)
+* Spawn objects fast!
+* Awesome performance
+* Easy to use
 
-* Spawn objects fast! Fast Game Object Pool for Unity by [**Night Train Code**](https://www.youtube.com/c/NightTrainCode/)
-
-# Navigation
+## Navigation
 
 * [Main](#nightpool)
-* [Installation](#how-to-use)
+* [Installation](#installation)
+* [How to use](#how-to-use)
+* [Game Object pre-caching](#game-object-pre-caching)
+* [OnSpawn & OnDespawn events](#ipoolitem)
 
-# How to use
+## Installation
 
-> YouTube Video about NightPool (old version)
+1. Install `NightPool` in your Unity project
+2. Add component `NightPoolEntry` on any `GameObject` in scene
 
-[![NightCache YouTube Video](https://img.youtube.com/vi/YPWriGuO72Q/0.jpg)](https://www.youtube.com/watch?v=YPWriGuO72Q)
+## How to use
 
-1) Install `NightPool` into your Unity project
+Replace `Instantiate()` and `Destroy()` methods with `NightPool.Spawn()` or `NightPool.Despawn()` in your code.
 
-2) Add component `NightPoolEntry` on any `GameObject` in scene
-
-3) Replace all `Instantiate()` and `Destroy()` methods with `NightPool.Spawn()` or `NightPool.Despawn()`
-
-### Old:
-
-```csharp
-    public class GameObjectSpawner : MonoBehaviour
-    {
-        [SerializeField] private GameObject prefab;
-    
-        private GameObject _spawnedGameObject;
-    
-        private void Spawn()
-        {
-            _spawnedGameObject = Instantiate(prefab, transform.position, Quaternion.identity);
-        }
-        
-        private void Despawn()
-        {
-            Destroy(_spawnedGameObject);
-        }
-    }
-```
-
-### New:
+`Old variant:`
 
 ```csharp
-    public class GameObjectSpawner : MonoBehaviour
-    {
-        [SerializeField] private GameObject prefab;
-    
-        private GameObject _spawnedGameObject;
-    
-        private void Spawn()
-        {
-            _spawnedGameObject = NightPool.Spawn(prefab, transform.position, Quaternion.identity);
-        }
+private void Spawn()
+{
+    _spawnedGameObject = Instantiate(prefab, transform.position, Quaternion.identity);
+}
         
-        private void Despawn()
-        {
-            NightPool.Despawn(_spawnedGameObject);
-        }
-    }
+private void Despawn()
+{
+    Destroy(_spawnedGameObject);
+}
 ```
 
-4) For pre-cache objects on awake, create PoolPreset (Create -> Source -> Pool -> PoolPreset)
+`New variant:`
 
-5) Add objects for pool in list:
+```csharp
+private void Spawn()
+{
+    _spawnedGameObject = NightPool.Spawn(prefab, transform.position, Quaternion.identity);
+}
+        
+private void Despawn()
+{
+    NightPool.Despawn(_spawnedGameObject);
+}
+```
+
+## Game Object pre-caching
+
+To pre-cache objects on `Awake()` you can create PoolPreset `Create -> Source -> Pool -> PoolPreset`
+
+And add objects for pool in list:
 
 | Parameters | Info |
 | ------ | ------ |
 | `Prefab` | Object to spawn |
 | `Size` | Spawn count |
 
-6) Set created `PoolPreset` in `NightPoolEntry`
+At the end set created `PoolPreset` in `NightPoolEntry`
 
-7) If you want to invoke methods `OnSpawn()` and `OnDespawn()`, implement interface `IPoolItem` on GameObject
+## IPoolItem
 
-```csharp
-    public class UnitSpawner : MonoBehaviour
-    {
-        [SerializeField] private Unit unitPrefab;
-        
-        private Unit _spawnedUnit;
-    
-        private void SpawnUnit()
-        {
-            _spawnedUnit = NightPool.Spawn(unitPrefab, transform.position, Quaternion.identity);
-        }
-        
-        private void DespawnUnit()
-        {
-            NightPool.Despawn(_spawnedUnit);
-        }
-    }
-```
+If you want to invoke methods `OnSpawn()` and `OnDespawn()` on poolable GameObject, implement interface `IPoolItem` on GameObject
 
 ```csharp
     public class Unit : MonoBehaviour, IPoolItem
     {
         void IPoolItem.OnSpawn()
         {
-            //DoSomething
+            Debug.Log("Unit Spawned");
         }
         
         void IPoolItem.OnDespawn()
         {
-            //DoSomething
+            Debug.Log("Unit Despawned");
         }
     }
 ```
