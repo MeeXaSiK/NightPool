@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using NTC.Global.System;
 using UnityEngine;
 using static NTC.Global.System.Tasks.TaskSugar;
 using Object = UnityEngine.Object;
@@ -335,8 +334,8 @@ namespace NTC.Global.Pool
         /// </summary>
         private static void ResetActions()
         {
-            OnObjectSpawned?.SetNull();
-            OnObjectDespawned?.SetNull();
+            OnObjectSpawned = null;
+            OnObjectDespawned = null;
         }
     }
 }
