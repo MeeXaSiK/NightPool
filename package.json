@@ -5,10 +5,10 @@
 		"name": "Night Train Code",
 		"url": "https://www.youtube.com/@NightTrainCode/"
 	},
-    "displayName": "NightPool",
-    "description": "NightPool - fast object pool for Unity.",
+    "displayName": "Night Pool",
+    "description": "Night Pool is a fast game object pool for Unity.",
     "unity": "2020.3",
-    "version": "3.0.0",
+    "version": "3.1.0",
     "keywords": [
         "nightpool",
         "objectpool",

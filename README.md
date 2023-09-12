@@ -56,6 +56,8 @@ NightPool.Despawn(newGameObject);
    * [Callbacks Type](#callbacks-type)
    * [Update Type](#update-type)
    * [Reaction On Repeated Delayed Despawn](#reaction-on-repeated-delayed-despawn)
+* [Extensions](#-extensions)
+   * [Particle System Auto Despawn](#particle-system-auto-despawn)
 * [Preload In Editor](#-preload-in-editor)
 * [How to attach DI container](#-how-to-attach-di-container)
 * [How to reset pooled rigidbody](#-how-to-reset-pooled-rigidbody)
@@ -89,6 +91,8 @@ Find `NightPoolGlobal.cs` in the project files and drag it onto any game object.
 ## Basics
 Use static class `NightPool` to `Spawn` or `Despawn` game objects instead of `Instantiate` and `Destroy`.
 ```csharp
+using NTC.Pool;
+
 public class Example : MonoBehaviour
 {
     [SerializeField] private GameObject _gameObjectPrefab;
@@ -595,6 +599,29 @@ Shows the current status of the clone.
 | Spawned | Clone is spawned. |
 | Despawned | Clone is despawned. |
 | SpawnedOverCapacity | Clone is spawned over capacity of the attached pool and will be just destroyed by `Despawn`. |
+
+# 🔸 Extensions
+## Particle System Auto Despawn
+You can despawn a particle system when it finishes playing using extension method `DespawnOnComplete` from the `NightPoolExtensions` class:
+```csharp
+using NTC.Pool;
+
+public class Example : MonoBehaviour
+{
+    [SerializeField] private ParticleSystem _particleSystemPrefab;
+
+    public void PlayParticle()
+    {
+        NightPool
+            .Spawn(_particleSystemPrefab)
+            .DespawnOnComplete();
+    }
+}
+```
+Additionally, this extension method returns `ParticleSystem`:
+```csharp
+ParticleSystem spawnedParticleSystem = NightPool.Spawn(_particleSystemPrefab).DespawnOnComplete();
+```
 
 # 🔸 Preload In Editor
 You can also preload game objects in the editor.
