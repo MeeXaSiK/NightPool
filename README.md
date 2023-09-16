@@ -1,5 +1,5 @@
 # 🚄 Night Pool
-[![License](https://img.shields.io/github/license/meexasik/nightpool?color=318CE7&style=flat-square)](LICENSE.md) [![Unity](https://img.shields.io/badge/Unity-2020.3+-2296F3.svg?color=318CE7&style=flat-square)](https://unity.com/)
+[![License](https://img.shields.io/github/license/meexasik/nightpool?color=318CE7&style=flat-square)](LICENSE.md) [![Version](https://img.shields.io/github/package-json/v/MeeXaSiK/NightPool?color=318CE7&style=flat-square)](package.json) [![Unity](https://img.shields.io/badge/Unity-2020.3+-2296F3.svg?color=318CE7&style=flat-square)](https://unity.com/)
 
 **Night Pool** is a fast and lightweight game object pooling solution for Unity by [**Night Train Code**](https://www.youtube.com/c/NightTrainCode/)
 * 🚀 Improves performance
