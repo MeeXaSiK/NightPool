@@ -194,6 +194,7 @@ namespace NTC.Pool
             ClampPreloadSize();
             CheckPreloadedClonesForErrors();
             CheckForPrefabMatchOnPlay();
+            CheckForPrefab(_prefab);
         }
 #endif
         private void Awake()
@@ -532,6 +533,12 @@ namespace NTC.Pool
                 return false;
             
 #if UNITY_EDITOR
+            if (Application.isPlaying == false)
+            {
+                Debug.LogError("You can't setup a pool when application is not playing!", this);
+                return false;
+            }
+            
             if (NightPool.s_checkForPrefab)
             {
                 if (CheckForPrefab(prefab) == false)
@@ -683,8 +690,13 @@ namespace NTC.Pool
         {
             if (_hasPreloadedGameObjects)
             {
-                _gameObjectsToPreload.ForEach(GameObjectInstantiated.RaiseEvent);
-                _gameObjectsToPreload.Clear();
+                for (int i = 0; i < _gameObjectsToPreload.Count; i++)
+                {
+                    GameObjectInstantiated.RaiseEvent(_gameObjectsToPreload[i]);
+                }
+
+                _hasPreloadedGameObjects = false;
+                _gameObjectsToPreload = null;
             }
         }
         
@@ -705,11 +717,22 @@ namespace NTC.Pool
         }
 
 #if UNITY_EDITOR
-        private static bool CheckForPrefab(GameObject gameObject)
+        private bool CheckForPrefab(GameObject gameObjectToCheck)
         {
-            if (PrefabUtility.IsPartOfAnyPrefab(gameObject) == false)
+            if (gameObjectToCheck == null)
+                return false;
+
+            if (gameObjectToCheck.scene.isLoaded)
             {
-                Debug.LogError($"The '{gameObject}' is not a prefab!", gameObject);
+                Debug.LogError("You can't set a game object from the scene as a prefab!", this);
+                _prefab = null;
+                return false;
+            }
+
+            if (PrefabUtility.IsPartOfAnyPrefab(gameObjectToCheck) == false)
+            {
+                Debug.LogError($"The '{gameObjectToCheck}' is not a prefab!", this);
+                _prefab = null;
                 return false;
             }
 
@@ -746,13 +769,15 @@ namespace NTC.Pool
         {
             if (_hasPreloadedGameObjects)
             {
+                bool isApplicationPlaying = Application.isPlaying;
+                
                 if (_prefab == null)
                 {
                     Debug.LogError("You have preloaded game objects in this pool, but prefab is null now! " +
                                    "Set the correct prefab to fix this or clear this pool.", this);
                 }
 
-                for (var i = 0; i < _gameObjectsToPreload.Count; i++)
+                for (int i = 0; i < _gameObjectsToPreload.Count; i++)
                 {
                     GameObject clone = _gameObjectsToPreload[i];
                     
@@ -762,8 +787,9 @@ namespace NTC.Pool
                                        "Clear this pool to fix this.", this);
                         return;
                     }
-
-                    if (PrefabUtility.GetCorrespondingObjectFromSource(clone) != _prefab)
+                    
+                    if (isApplicationPlaying == false && 
+                        PrefabUtility.GetCorrespondingObjectFromSource(clone) != _prefab)
                     {
                         Debug.LogError("Your preloaded game objects no longer match the prefab. " +
                                        "Clear this pool or set the correct prefab.", this);
@@ -900,7 +926,7 @@ namespace NTC.Pool
                 Debug.LogError($"The prefab of the pool '{name}' is null!", this);
                 return false;
             }
-
+            
             if (CheckForPrefab(_prefab) == false)
             {
                 return false;
@@ -921,9 +947,13 @@ namespace NTC.Pool
         
         private void PreloadGameObject()
         {
-            GameObject gameObjectToPreload = Instantiate(_prefab, transform);
-            gameObjectToPreload.SetActive(false);
+            GameObject gameObjectToPreload = PrefabUtility.InstantiatePrefab(_prefab, transform) as GameObject;
+
+            if (gameObjectToPreload == null) 
+                return;
             
+            gameObjectToPreload.SetActive(false);
+
             _instantiated++;
 
             if (Application.isPlaying)
@@ -1016,12 +1046,12 @@ namespace NTC.Pool
         {
             if (_gameObjectsToPreload != null)
             {
-                if (_gameObjectsToPreload.Count > 0)
+                for (int i = 0; i < _gameObjectsToPreload.Count; i++)
                 {
-                    _gameObjectsToPreload.ForEach(DestroyImmediate);
-                    _gameObjectsToPreload.Clear();
+                    DestroyImmediate(_gameObjectsToPreload[i]);
                 }
-
+                
+                _gameObjectsToPreload.Clear();
                 _hasPreloadedGameObjects = false;
             }
         }
