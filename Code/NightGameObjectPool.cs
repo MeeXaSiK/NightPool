@@ -707,7 +707,7 @@ namespace NTC.Pool
 #if UNITY_EDITOR
         private static bool CheckForPrefab(GameObject gameObject)
         {
-            if (PrefabUtility.IsPartOfRegularPrefab(gameObject) == false)
+            if (PrefabUtility.IsPartOfAnyPrefab(gameObject) == false)
             {
                 Debug.LogError($"The '{gameObject}' is not a prefab!", gameObject);
                 return false;
