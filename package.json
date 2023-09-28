@@ -8,7 +8,7 @@
     "displayName": "Night Pool",
     "description": "Night Pool is a fast game object pool for Unity.",
     "unity": "2020.3",
-    "version": "3.1.0",
+    "version": "3.1.1",
     "keywords": [
         "nightpool",
         "objectpool",
